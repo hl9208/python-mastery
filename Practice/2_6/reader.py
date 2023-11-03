@@ -1,5 +1,6 @@
 # redear.py
 import csv
+import tracemalloc
 from sys import intern
 
 class DataCollection():
@@ -27,7 +28,7 @@ def read_csv_as_dicts(filename, types):
     rows = csv.reader(f)
     headers = next(rows)
     for row in rows:
-        dicts.append({ name:intern(func(val)) for name, func, val in zip(headers, types, row) })
+        dicts.append({ name:func(val) for name, func, val in zip(headers, types, row) })
     f.close()
     return dicts
 
@@ -42,7 +43,9 @@ def read_csv_as_columns(filename, types):
     return d
 
 if __name__ == '__main__':
-    import tracemalloc
     tracemalloc.start()
-    rows = read_csv_as_columns('../../Data/ctabus.csv', types=[str, str, str, int])
+    #rows = read_csv_as_dicts('../../Data/ctabus.csv', types=[intern, intern, str, int])
+    rows = read_csv_as_columns('../../Data/ctabus.csv', types=[intern, intern, str, int])
+    routeids = { id(row['route']) for row in rows }
+    print(len(routeids))
     print('Memory Use: Current %d Peak %d' % tracemalloc.get_traced_memory())
