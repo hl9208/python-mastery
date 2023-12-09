@@ -3,41 +3,37 @@
 import csv
 from  typing import List
 
-def read_csv_as_dicts(filename, types):
+def read_csv_as_dicts(filename, types, *, headers=None):
     '''
     Read CSV data into a list of dictionaries with optional type conversion
     '''
     records = []
     with open(filename) as file:
-        records = csv_as_dicts(file, types)
+        records = csv_as_dicts(file, types, headers)
     return records
 
-def read_csv_as_instances(filename, cls):
+def read_csv_as_instances(filename, cls, *, headers=None):
     '''
     Read CSV data into a list of instances
     '''
     records = []
     with open(filename) as file:
-        records = csv_as_instances(file, cls)
+        records = csv_as_instances(file, cls, headers)
     return records
 
-def csv_as_dicts(lines: List[str], types: List[function], headers: List[str]=None) -> List:
+def csv_as_dicts(lines: List[str], types: List[str], *,  headers: List[str]=None) -> List:
+    converter = lambda headers, row: { name: func(val) for name, func, val in zip (headers, types, row)}
+    return convert_csv(lines, converter)
+
+def csv_as_instances(lines: List[bytes], cls, *, headers: List[str]=None) -> List:
+    converter = lambda headers, row: cls.from_row(row)
+    return convert_csv(lines, converter)
+
+def convert_csv(lines, func, *, headers=None):
     records = []
     rows = csv.reader(lines)
     if headers is None:
         headers = next(rows)
-    for row in rows:
-        record = { name: func(val)
-                  for name, func, val in zip(headers, types, row) }
-        records.append(record)
-    return records
-
-def csv_as_instances(lines: List[bytes], cls, headers: List[str]=None) -> List:
-    records = []
-    rows = csv.reader(lines)
-    if headers is None:
-        headers = next(rows)
-    for row in rows:
-        record = cls.from_row(row)
-        records.append(record)
+    # for문을 map으로 대체
+    records = list(map(lambda row: func(headers, row), rows))
     return records
