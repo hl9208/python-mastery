@@ -1,26 +1,20 @@
 # typedproperty.py
 
-def typedproperty(expected_type):
-    class TypedProperty:
-        def __init__(self, expected_type):
-            self.expected_type
-            self.private_name = None
+def typedproperty(name, expected_type):
+    private_name = '_' + name # private_name이 문자열이어도 getattr, setattr에서 접근하는데 문제가 없다.
 
-        def __set_name__(self, cls, name):
-            self.private_name = name
+    @property
+    def value(self):
+        return getattr(self, private_name)
 
-        @property
-        def value(self):
-            return getattr(self, self.private_name)
+    @value.setter
+    def value(self, val):
+        if not isinstance(val, expected_type):
+            raise TypeError(f'Expected {self.expected_type}')
+        setattr(self, private_name, val)
 
-        @value.setter
-        def value(self, val):
-            if not isinstance(val, self.expected_type):
-                raise TypeError(f'Expected {self.expected_type}')
-            setattr(self, self.private_name, val)
+    return value
 
-    return TypedProperty
-
-String = lambda : typedproperty(str)
-Integer = lambda : typedproperty(int)
-Float = lambda : typedproperty(float)
+String = lambda name: typedproperty(name, str)
+Integer = lambda name: typedproperty(name, int)
+Float = lambda name: typedproperty(name, float)
