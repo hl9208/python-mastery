@@ -22,7 +22,11 @@ class Structure():
 
     @classmethod
     def create_init(cls):
-        code = f'def __init__(self, {eval(cls._fields)}):\n'
+        argstr = ','.join(cls._fields)
+        code = f'def __init__(self, {argstr}):\n'
         for name in cls._fields:
-            code += f'    cls.{name} = {name}\n'
-        eval(code)
+            code += f'    self.{name} = {name}\n'
+        print(code)
+        locs = {}
+        exec(code, locs)
+        cls.__init__ = locs['__init__']
